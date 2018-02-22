@@ -1,0 +1,602 @@
+
+p:=7;
+r:=1;
+q:=p^r;
+m:=1;    /* This is the value of m*P0-n*Q to calculate the degree */
+Fq<v>:=GF(q);                  
+Fqx<x> := PolynomialRing(Fq);
+A0:=Random(Fq);
+A1:=Random(Fq);
+A2:=Random(Fq);
+A3:=Random(Fq);
+A4:=Random(Fq);
+A5:=1;
+F:= GF(p^r);
+err :=0;
+
+
+R<x> := PolynomialRing(Fq);
+disc := 0;
+while disc eq 0 do
+
+c0 := Random(Fq);
+c1 := Random(Fq);
+c2 := Random(Fq);
+c3 := Random(Fq);
+
+//f := (x-Random(Fq))*(x-Random(Fq)) * (x^3 + c2*x^2 + c1*x + c0);
+
+f := x^5 + c3*x^3 + c2*x^2 + c1*x + c0;
+
+
+disc := Discriminant(f);
+
+end while;
+
+
+A0 := Coefficient(f,0);
+A1 := Coefficient(f,1);
+A2 := Coefficient(f,2);
+A3 := Coefficient(f,3);
+A4 := Coefficient(f,4);
+A5 := Coefficient(f,5);
+
+
+f := A5*x^5 + A4*x^4 + A3*x^3 + A2*x^2 + A1*x+ A0;
+
+
+nf := Evaluate(f,x);
+f;
+C := HyperellipticCurve(nf); C;
+
+
+A0 := Coefficient(nf,0);
+A1 := Coefficient(nf,1);
+A2 := Coefficient(nf,2);
+A3 := Coefficient(nf,3);
+A4 := Coefficient(nf,4);
+A5 := Coefficient(nf,5);
+
+
+Roots(f);
+FC<X,Y> := FunctionField(C); 
+J := Jacobian(C);
+CE := BaseExtend(C,FC);
+JE := Jacobian(CE);
+Kum := KummerSurface(JE);
+PR<t> := PolynomialRing(FC);
+P0 := JE![t-X^q, Y^q];
+Q := JE![t-X,Y];
+
+
+nSQ := 0; while IsSquare(nSQ) ne false do nSQ := Random(GF(q)); end while;
+
+ft := A5*x^5 + nSQ^2*A3*x^3 + nSQ^3*A2*x^2 + nSQ^4*A1*x + nSQ^5*A0;
+CT := HyperellipticCurve(ft);
+FCT<Z,W> := FunctionField(CT); 
+JT := Jacobian(CT);
+CET := BaseExtend(CT,FCT);
+JET := Jacobian(CET);
+Kum := KummerSurface(JET);
+PRT<s> := PolynomialRing(FCT);
+P0T := JET![s-Z^q, W^q];
+QT := JET![s-Z,W];
+
+A0T := Coefficient(ft,0);
+A1T := Coefficient(ft,1);
+A2T := Coefficient(ft,2);
+A3T := Coefficient(ft,3);
+A4T := Coefficient(ft,4);
+A5T := Coefficient(ft,5);
+
+
+
+
+/* Get the Trace of Frobenius and the Characteristic Poly of Frobenius */
+
+PR<T> := PolynomialRing(Rationals());
+Z := Evaluate(PR!Numerator(ZetaFunction(C)),1/T)*T^4;
+Z;
+trace := -Coefficient(PR!Z,3);
+
+
+
+getA := function(P)
+        return Coefficient(P[1],1);
+end function;
+
+getB := function(P)
+        return Coefficient(P[1],0);
+end function;
+
+getC := function(P)
+        return Coefficient(P[2],1);
+end function;
+
+getD := function(P)
+        return Coefficient(P[2],0);
+end function;
+
+
+
+
+
+
+
+thetadiv := function(Jac,JacE) td := [];
+
+i:=1;
+
+
+for D in RationalPoints(Jac) do
+if Degree(D[1]) eq 1 then
+                a := Coefficient(D[1],0);
+                b := Coefficient(D[2],0);
+                td[i] := JacE![t+a,b];
+                i := i+1;
+end if;
+end for;
+td[i] := P0-P0;
+return td;
+end function;
+
+
+
+
+
+
+constantdivs := function(Jac,JacE) cd := [];
+
+i:=1;
+for D in RationalPoints(Jac) do
+if Degree(D[1]) eq 1 then
+		a := Coefficient(D[1],0);
+		b := Coefficient(D[2],0);
+		cd[i] := JacE![t+a,b];
+                elif Degree(D[1]) eq 2 then
+                a := Coefficient(D[1],1);
+		b := Coefficient(D[1],0);
+		c := Coefficient(D[2],1);
+		d := Coefficient(D[2],0);
+
+		cd[i] := JacE![t^2 + a*t + b , c*t+d];
+		end if;
+		i := i+1;
+end for;
+cd[i] := P0-P0;
+cd[1] := cd[i];
+return cd;
+end function;
+
+
+
+
+
+
+
+
+
+
+
+twotorsion := function(Jac,JacE) tt := []; 
+tt[1] := P0-P0;
+i := 2;
+
+
+for D in RationalPoints(Jac) do
+if Order(D) eq 2
+	then
+		//D;
+		if Degree(D[1]) eq 1 then
+		a := Coefficient(D[1],0);
+		b := Coefficient(D[2],0);
+	//	a,b;
+		tt[i] := JacE![t+a,b];
+		i := i+1;
+                elif Degree(D[1]) eq 2 then
+                a := Coefficient(D[1],1);
+		b := Coefficient(D[1],0);
+		c := Coefficient(D[2],1);
+		d := Coefficient(D[2],0);
+		tt[i] := JacE![t^2 + a*t + b , c*t+d];
+		i := i+1;
+		end if;
+end if;
+end for;
+
+return tt;
+end function;
+
+
+
+
+
+
+
+/* Map from the Jacobian to P3, this is one coordinate of the map */
+
+
+
+F0 := function(A,B) 
+	f0 := (2*A0-A*A1+2*B*A2-A*B*A3+2*B^2*A4-A5*A*B^2);
+	return f0;
+end function;
+
+/* f(x1)+f(x2) */
+S2 := function(A,B)
+	s2 := 2*A0-A1*A+A2*(A*A-2*B)+A3*(3*B*A-A*A*A)+A4*(A*A*A*A-2*B*(2*A*A-B))-A5*(A*A*A*A*A-5*A*B*(A*A-B)) ;
+	return s2;
+end function;
+
+
+/* y1*y2 */
+S3 := function(A,B,C)
+	s3 := (S2(A,B) - C*C*(A*A-4*B))/2;
+	return s3;
+end function;
+
+F0T := function(A,B) 
+	f0 := (2*A0T-A*A1T+2*B*A2T-A*B*A3T+2*B^2*A4T-A5T*A*B^2);
+	return f0;
+end function;
+
+/* f(x1)+f(x2) */
+S2T := function(A,B)
+	s2 := 2*A0T-A1T*A+A2T*(A*A-2*B)+A3T*(3*B*A-A*A*A)+A4T*(A*A*A*A-2*B*(2*A*A-B))-A5T*(A*A*A*A*A-5*A*B*(A*A-B)) ;
+	return s2;
+end function;
+
+
+/* y1*y2 */
+S3T := function(A,B,C)
+	s3 := (S2T(A,B) - C*C*(A*A-4*B))/2;
+	return s3;
+end function;
+
+
+
+
+
+
+dK4 := function(Pn)
+
+        A:=Coefficient(Pn[1],1);
+        B:=Coefficient(Pn[1],0);
+        C:=Coefficient(Pn[2],1);
+
+
+return (-4*A0*A^3 - 4*A1*A^2*B - 4*A2*A*B^2 + 4*A0*A*B - 4*A0*A3*A + B^4 - 2*A3*B^3 + (2*A1 + A3^2)*B^2 - 2*A1*A3*B + 4*A0*A2 + A1^2)/(2*F0(A,B));
+
+
+end function;
+
+
+
+
+
+K4 := function(Pn) 
+	A:=Coefficient(Pn[1],1);
+	B:=Coefficient(Pn[1],0);
+	C:=Coefficient(Pn[2],1);
+
+
+	if Degree(Pn[1]) eq 1  then 
+	//printf "deg u = %o, deg v = %o\n", Degree(Pn[1]), Degree(Pn[2]) ;
+	return B^2;
+	end if;
+
+
+	//if Discriminant(Pn[1]) eq 0 then 
+	//printf "info: Doubling\n";
+	//return dK4(Pn);
+	//end if;
+	
+
+	return (F0(A,B)-2*S3(A,B,C))/(A^2-4*B);
+end function;
+
+K4T := function(Pn) 
+	A:=Coefficient(Pn[1],1);
+	B:=Coefficient(Pn[1],0);
+	C:=Coefficient(Pn[2],1);
+
+
+	if Degree(Pn[1]) eq 1  then 
+	//printf "deg u = %o, deg v = %o\n", Degree(Pn[1]), Degree(Pn[2]) ;
+	return B^2;
+	end if;
+
+
+	if Discriminant(Pn[1]) eq 0 then 
+	printf "info: Doubling\n";
+	return dK4(Pn);
+	end if;
+	
+
+	return (F0T(A,B)-2*S3T(A,B,C))/(A^2-4*B);
+end function;
+
+
+numK4 := function(Pn) 
+	A:=Coefficient(Pn[1],1);
+        B:=Coefficient(Pn[1],0);
+        C:=Coefficient(Pn[2],1);
+	nn := Numerator( (F0(A,B)-2*S3(A,B,C)) );
+	dn := Denominator ( (F0(A,B)-2*S3(A,B,C)) );
+
+	nd := Numerator(A^2 - 4*B);
+	dd := Denominator(A^2 - 4*B);
+
+	return FC!(nn*dd);
+
+
+end function;
+
+num2K4 := function(Pn) 
+        A:=Coefficient(Pn[1],1);
+        B:=Coefficient(Pn[1],0);
+        C:=Coefficient(Pn[2],1);
+	return  (F0(A,B)-2*S3(A,B,C)) ;
+end function;
+
+den2K4 := function(Pn)
+        A:=Coefficient(Pn[1],1);
+        B:=Coefficient(Pn[1],0);
+        C:=Coefficient(Pn[2],1);
+        return  (A^2 - 4*B) ;
+end function;
+
+
+
+
+
+
+denK4 := function(Pn)
+        A:=Coefficient(Pn[1],1);
+        B:=Coefficient(Pn[1],0);
+        C:=Coefficient(Pn[2],1);
+
+        nn := Numerator( (F0(A,B)-2*S3(A,B,C)) );
+        dn := Denominator ( (F0(A,B)-2*S3(A,B,C)) );
+
+        nd := Numerator(A^2 - 4*B);
+        dd := Denominator(A^2 - 4*B);
+	
+	return FC!(dn*nd);
+
+end function;
+
+KumLocus := function(D)
+
+xi1 := 1;
+xi2 :=  -getA(D);
+xi3 := getB(D);
+xi4 := K4(D);
+
+k2 := xi2^2 - 4*xi1*xi3;
+k1 := -2*(2*A0*xi1^3 + A1*xi1^2*xi2+2*A2*xi1^2*xi3 + A3*xi1*xi2*xi3 + 2*A4*xi1*xi3^2 + A5*xi2*xi3^2);
+k0 := (A1^2-4*A0*A2)*xi1^4 - 4*A0*A3*xi1^3*xi2 - 2*A1*A3*xi1^3*xi3-4*A0*A4*xi1^2*xi2^2+4*(A0*A5-A1*A4)*xi1^2*xi2*xi3+(A3^2+2*A1*A5-4*A2*A4)*xi1^2*xi3^2-4*A0*A5*xi1*xi2^3+4*(-A1*A5)*xi1*xi3*xi2^2+4*(-A2*A5)*xi1*xi2*xi3^2  \
+-2*A3*A5*xi1*xi3^3 +(A5^2)*xi3^4;
+
+printf "K0 := %o\nK1 := %o\nK2 := %o\n",k0,k1,k2;
+
+return k2*xi4^2 + k1*xi4 + k0;
+
+
+
+end function;
+
+
+
+K0 := function(D)
+
+xi1 := 1;
+xi2 :=  -getA(D);
+xi3 := getB(D);
+k0 := (A1^2-4*A0*A2)*xi1^4 - 4*A0*A3*xi1^3*xi2 - 2*A1*A3*xi1^3*xi3-4*A0*A4*xi1^2*xi2^2+4*(A0*A5-A1*A4)*xi1^2*xi2*xi3+(A3^2+2*A1*A5-4*A2*A4)*xi1^2*xi3^2-4*A0*A5*xi1*xi2^3+4*(-A1*A5)*xi1*xi3*xi2^2+4*(-A2*A5)*xi1*xi2*xi3^2  \
+-2*A3*A5*xi1*xi3^3 +(A5^2)*xi3^4;
+ return k0;
+
+
+end function;
+
+
+
+K4identity := function(D) 
+
+A := getA(D);
+B := getB(D);
+C := getC(D);
+Y1Y2 := S3(A,B,C);
+k4 := K4(D);
+
+
+a := A^2 -4*B;
+b := -2*F0(A,B);
+c := (F0(A,B)^2 - (2*Y1Y2)^2) / (A^2 - 4*B);
+
+return a*k4^2 + b*k4 + c;
+
+
+
+end function;
+
+
+
+
+
+
+IsInfinity := function(x) 
+if x eq Infinity() then
+return true;
+end if;
+return false;
+end function;
+
+
+evcurvek4frnid := function(n,W)
+
+trv := [];
+ntrv:=[];
+
+I := 1;
+for P in Points(C) do
+
+tr := Evaluate(K4(P0+n*Q+W),P);
+ntr:= Evaluate(K4(P0+n*Q),P);
+
+I := I+1;
+printf "K4(Fr+%oId+W)(%o)=%o\tK4(Fr+%oId)(%o)=%o\n",n,P,tr,n,P,ntr;
+end for;
+
+return 1;
+end function;
+
+
+
+
+
+
+/* Get the Degree of the rational function on the fourth coordinate of the map K4:J -> P3 */
+D := function(n,Trans)
+	
+
+	DivType := Degree(Trans[1]);
+
+	if DivType eq 0 then
+	newTrans := P0-P0;
+	end if;
+
+
+	if DivType eq 2 then
+	newTrans := JE! [t^2 + getA(Trans)*t + getB(Trans), getC(Trans)*t + getD(Trans) ];
+	end if;
+
+	if DivType eq 1 then
+	newTrans := JE! [t+Coefficient(Trans[1],0), Coefficient(Trans[2],0)];
+	end if;
+
+
+
+
+	Pn := m*P0 + n*Q + newTrans;
+	fK4 := K4(Pn);
+	degk4 := Degree(fK4)/2;
+	//degk4 := Degree(getA(Pn))/2;
+
+	if Degree(Pn[1]) eq 1 then
+	degk4 := Degree (FC!Numerator( (Points(Kum,[0,1,Roots(Pn[1])[1][1]]))[1][4]))/2 ;
+	//else
+        //degk4 := Degree(          FC!Numerator((Points(Kum,[1,-1*getA(Pn), getB(Pn) ]))[1][4])             )/2;
+	end if;
+
+	printf "degA := %o, degB := %o  => %o %o deg(K4(D_%o)=%o :[P0 + (%oQ)]:",Degree(getA(Pn))/2, Degree(getB(Pn))/2, n,degk4,n,degk4,n;
+	return degk4;
+end function;
+
+
+translate_theta := function(n,tdiv) 
+for i :=1 to #tdiv do
+	exp := 2*n^2 + trace*n + 2*q;
+	nfdiv := P0+n*Q+tdiv[i];
+	a := Degree(getA(nfdiv))/2;
+	b := Degree(getB(nfdiv))/2;
+	k := Degree(K4(nfdiv))/2;
+	printf "Calculating Fr+[%o]Id+%o\n",n,tdiv[i];
+	printf "Expected: %o: => Got degA=%o,degB=%o,degK4=%o\n",exp,a,b,k;
+
+	if(exp eq a) then
+		printf "------OKE\n\n" ;
+	else
+		printf "------ERR (diffa=%o diffb=%o diffk4=%o)\n\n",exp-a,exp-b,exp-k;  
+	end if;
+end for;
+        return 0;
+end function;
+
+
+MyOrder := function(D) 
+
+for i := 1 to #J do
+if i*D eq (Q-Q) then
+return i;
+end if;
+end for;
+
+end function;
+	
+
+
+DT := P0-P0;
+error_deg := 0;
+tt := twotorsion(J,JE);
+td := thetadiv(J,JE);
+
+//tt := [];
+//tt[1] := JE![t,0];
+
+
+
+//for TP in twotorsion(J,JE) do
+
+//printf "Translation of jacobian to %o (order=%o)\n",TP,Order(J!TP);
+//Roots(TP[1]);
+error_deg := 0;
+
+
+// BEGIN LOOP //
+
+for n:=-p to p do
+//Dn := D(n, TP);
+
+//if Gcd(n,#J) ne 1 then
+if 1 eq 1 then
+
+
+for TP in tt do
+//for TP in thetadiv(J,JE) do
+nDiv := P0+n*Q+TP;
+Dn := Degree(K4(nDiv))/2;
+Dnd := Degree(FC!(Denominator(K4(nDiv))))/2;
+val := 2*n^2 + m*trace*n +  2*(m^2)*q - Dn;
+if val ne 0 then
+err:=val;
+end if;
+Trans := TP;
+if val eq 0 then
+break;
+end if;
+
+end for;
+
+printf "QuadPoly d(%o)=%o|deg K4(Fr+[%o]Id+T)=%o|T=%o|err[%o,d=%o],dnK4=%o\n",n,val+Dn,n,Dn,Trans, val,err,Dnd;
+err := 0;
+if val ne 0
+then
+error_deg := error_deg + 1;
+end if;
+
+end if;
+
+end for;
+
+if error_deg ne 0 then
+printf "%o ERRORS FOUND!!!!!!!!!\n", error_deg;
+else
+printf "-----------------FINE! NOT ERRORS -------------------\n";
+end if;
+
+//for N := -2 to 2 do
+
+//evcurvek4frnid(N,tt[2]);
+//printf "\n";
+
+
+
+//end for;
+
+printf "char: 2*T^2 + %o*T + %o\n",m*trace, 2*m^2*q;
+
+//end if;
+
+//end for;
